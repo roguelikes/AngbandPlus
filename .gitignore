@@ -1,0 +1,11 @@
+
+# RVIP port: build output, generated files, local scores
+*.o
+*.dSYM/
+*.orig
+*.orig-*
+lib/data/*.raw
+src/w_*.c
+src/tolua
+src/tome
+/tome

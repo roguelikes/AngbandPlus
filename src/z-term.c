@@ -1110,9 +1110,17 @@ static void Term_fresh_row_both(int y, int x1, int x2)
 	byte na;
 	char nc;
 
-	/* Scan "modified" columns */
+	/* A picture may be drawn two cells wide (bigtile), so when one changes,
+	 * the cell to its right must be redrawn too even if it looks unchanged */
+	bool force = FALSE, forced;
+
+	/* Scan "modified" columns (plus one, for a trailing wide picture) */
+	if (x2 < Term->wid - 1) x2++;
 	for (x = x1; x <= x2; x++)
 	{
+		forced = force;
+		force = FALSE;
+
 		/* See what is currently here */
 		oa = old_aa[x];
 		oc = old_cc[x];
@@ -1137,7 +1145,7 @@ static void Term_fresh_row_both(int y, int x1, int x2)
 		nec = scr_ecc[x];
 
 		/* Handle unchanged grids */
-		if ((na == oa) && (nc == oc) &&
+		if (!forced && (na == oa) && (nc == oc) &&
 		                (nta == ota) && (ntc == otc) &&
 		                (nea == oea) && (nec == oec))
 
@@ -1176,6 +1184,9 @@ static void Term_fresh_row_both(int y, int x1, int x2)
 			/* Skip */
 			continue;
 		}
+
+		/* The old picture may have spilled into the next cell */
+		force = (oa & 0x80) ? TRUE : FALSE;
 
 		/* Save new contents */
 		old_aa[x] = na;

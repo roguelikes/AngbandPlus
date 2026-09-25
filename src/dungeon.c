@@ -3782,6 +3782,14 @@ static void process_command(void)
 
 		/*** Running, Resting, Searching, Staying */
 
+		/* Auto-explore */
+	case 'X':
+		{
+			if (p_ptr->control) break;
+			do_cmd_explore();
+			break;
+		}
+
 		/* Begin Running -- Arg is Max Distance */
 	case '.':
 		{
@@ -3872,9 +3880,14 @@ static void process_command(void)
 
 			if (p_ptr->control) break;
 			/* Normal cases */
-			if (p_ptr->wild_mode || dun_level || is_quest(dun_level))
+			if (p_ptr->wild_mode)
 			{
 				do_cmd_go_up();
+			}
+			else if (dun_level || is_quest(dun_level))
+			{
+				/* Take the stairs here, or walk to the nearest known ones */
+				do_cmd_stairs(TRUE);
 			}
 			else if (vanilla_town)
 			{
@@ -3938,7 +3951,8 @@ static void process_command(void)
 			/* Normal cases */
 			if (!p_ptr->wild_mode)
 			{
-				do_cmd_go_down();
+				/* Take the stairs here, or walk to the nearest known ones */
+				do_cmd_stairs(FALSE);
 			}
 
 			/* Special cases */
@@ -4809,7 +4823,7 @@ void process_player(void)
 	if (!avoid_abort)
 	{
 		/* Check for "player abort" (semi-efficiently for resting) */
-		if (running || command_rep || (resting && !(resting & 0x0F)))
+		if (running || auto_explore || command_rep || (resting && !(resting & 0x0F)))
 		{
 			/* Do not wait */
 			inkey_scan = TRUE;
@@ -4936,6 +4950,12 @@ void process_player(void)
 
 			/* Take a turn */
 			energy_use = 100;
+		}
+
+		/* Auto-exploring */
+		else if (auto_explore)
+		{
+			explore_step();
 		}
 
 		/* Running */
@@ -5192,6 +5212,9 @@ void process_player(void)
  */
 static void dungeon(void)
 {
+	/* New level: forget what auto-explore has seen */
+	explore_reset();
+
 	/* Reset various flags */
 	hack_mind = FALSE;
 
@@ -5824,20 +5847,20 @@ void play_game(bool new_game)
 	/* Reset the visual mappings */
 	reset_visuals();
 
+	/* load user file (before the first window draw, so window flags are final) */
+	process_pref_file("user.prf");
+
+	/* Load the "pref" files */
+	load_all_pref_files();
+
 	/* Window stuff */
-	p_ptr->window |= (PW_INVEN | PW_EQUIP | PW_PLAYER);
+	p_ptr->window |= (PW_INVEN | PW_EQUIP | PW_PLAYER | PW_MESSAGE);
 
 	/* Window stuff */
 	p_ptr->window |= (PW_MONSTER);
 
 	/* Window stuff */
 	window_stuff();
-
-	/* load user file */
-	process_pref_file("user.prf");
-
-	/* Load the "pref" files */
-	load_all_pref_files();
 
 	/* Set or clear "rogue_like_commands" if requested */
 	if (arg_force_original) rogue_like_commands = FALSE;

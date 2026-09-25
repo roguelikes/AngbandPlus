@@ -4118,6 +4118,9 @@ void update_view(void)
 
 	/* Save 'view_n' */
 	view_n = fast_view_n;
+
+	/* The visible monster/item list depends on the view */
+	p_ptr->window |= (PW_M_LIST);
 }
 
 
@@ -5169,6 +5172,9 @@ void disturb(int stop_search, int unused_flag)
 		/* Redraw the state (later) */
 		p_ptr->redraw |= (PR_STATE);
 	}
+
+	/* Cancel auto-explore */
+	auto_explore = FALSE;
 
 	/* Cancel running */
 	if (running)

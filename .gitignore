@@ -9,3 +9,5 @@ src/w_*.c
 src/tolua
 src/tome
 /tome
+src/Makefile
+.DS_Store
